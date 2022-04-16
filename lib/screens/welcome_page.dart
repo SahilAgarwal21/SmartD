@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:smart_d/services/firebase_service.dart';
 import 'package:smart_d/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class WelcomePage extends StatelessWidget {
   @override
@@ -33,57 +35,79 @@ class WelcomePage extends StatelessWidget {
                               color: Constants.kDarkBlueColor,
                               fontWeight: FontWeight.bold,
                               fontSize: 30.0)),
-                      TextSpan(
-                          text: Constants.textIntroDesc2,
-                          style: TextStyle(
-                              color: Constants.kBlackColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 30.0)),
                     ])),
-                SizedBox(height: size.height * 0.01),
-                Text(
-                  Constants.textSmallSignUp,
-                  style: TextStyle(color: Constants.kDarkGreyColor),
-                ),
                 SizedBox(height: size.height * 0.1),
-                SizedBox(
-                  width: size.width * 0.8,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      result == null
-                          ? Navigator.pushNamed(
-                          context, Constants.signInNavigate)
-                          : Navigator.pushReplacementNamed(
-                          context, Constants.homeNavigate);
-                    },
-                    child: Text(Constants.textStart),
-                    style: ButtonStyle(
-                        foregroundColor: MaterialStateProperty.all<Color>(
-                            Constants.kPrimaryColor),
-                        backgroundColor: MaterialStateProperty.all<Color>(
-                            Constants.kBlackColor),
-                        side: MaterialStateProperty.all<BorderSide>(
-                            BorderSide.none)),
-                  ),
-                ),
-                SizedBox(
-                  width: size.width * 0.8,
-                  child: OutlinedButton(
-                    onPressed: () {},
-                    child: Text(
-                      Constants.textSignIn,
-                      style: TextStyle(color: Constants.kBlackColor),
-                    ),
-                    style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all<Color>(
-                            Constants.kGreyColor),
-                        side: MaterialStateProperty.all<BorderSide>(
-                            BorderSide.none)),
-                  ),
-                )
+                GoogleSignIn(),
               ],
             ),
           ),
         ));
+  }
+}
+
+class GoogleSignIn extends StatefulWidget {
+  GoogleSignIn({Key? key}) : super(key: key);
+
+  @override
+  _GoogleSignInState createState() => _GoogleSignInState();
+}
+
+class _GoogleSignInState extends State<GoogleSignIn> {
+  bool isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
+    return  !isLoading? SizedBox(
+      width: size.width * 0.8,
+      child: OutlinedButton.icon(
+        icon: FaIcon(FontAwesomeIcons.google),
+        onPressed: () async {
+          setState(() {
+            isLoading = true;
+          });
+          FirebaseService service = new FirebaseService();
+          try {
+            await service.signInwithGoogle();
+            Navigator.pushNamedAndRemoveUntil(context, Constants.homeNavigate, (route) => false);
+          } catch(e){
+            if(e is FirebaseAuthException){
+              showMessage(e.message!);
+            }
+          }
+          setState(() {
+            isLoading = false;
+          });
+        },
+        label: Text(
+          Constants.textSignInGoogle,
+          style: TextStyle(
+              color: Constants.kBlackColor, fontWeight: FontWeight.bold),
+        ),
+        style: ButtonStyle(
+            backgroundColor:
+            MaterialStateProperty.all<Color>(Constants.kGreyColor),
+            side: MaterialStateProperty.all<BorderSide>(BorderSide.none)),
+      ),
+    ) : CircularProgressIndicator();
+  }
+
+  void showMessage(String message) {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Error"),
+            content: Text(message),
+            actions: [
+              TextButton(
+                child: Text("Ok"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          );
+        });
   }
 }

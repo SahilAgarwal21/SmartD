@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
                 FirebaseService service = new FirebaseService();
                 await service.signOutFromGoogle();
                 Navigator.pushReplacementNamed(
-                    context, Constants.signInNavigate);
+                    context, Constants.welcomeNavigate);
               },
             )
           ],
